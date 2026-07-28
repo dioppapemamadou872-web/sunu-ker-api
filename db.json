@@ -1,0 +1,208 @@
+{
+  "logements": [
+    {
+      "id": 1,
+      "titre": "Studio meublé",
+      "secteur": "Plateau",
+      "type": "Studio",
+      "prix": 120000,
+      "chambres": 1,
+      "salons": 1,
+      "description": "Studio lumineux et meublé, proche des commerces et transports.",
+      "equipements": [
+        "Eau",
+        "Électricité",
+        "Sécurité",
+        "Wifi"
+      ],
+      "telephoneProprietaire": "77 000 00 00",
+      "statut": "validee"
+    },
+    {
+      "id": 2,
+      "titre": "Chambre avec salle de bain",
+      "secteur": "Parcelles Assainies",
+      "type": "Chambre",
+      "prix": 60000,
+      "chambres": 1,
+      "salons": 0,
+      "description": "Chambre indépendante avec salle de bain privative.",
+      "equipements": [
+        "Eau",
+        "Électricité"
+      ],
+      "telephoneProprietaire": "77 111 11 11",
+      "statut": "validee"
+    },
+    {
+      "id": 1784926985950,
+      "titre": "Chambre",
+      "secteur": "Plateau",
+      "type": "Studio",
+      "prix": 25000,
+      "chambres": 1,
+      "salons": 1,
+      "description": "Grand et large",
+      "equipements": [],
+      "telephoneProprietaire": "77 763 52 53",
+      "statut": "validee"
+    },
+    {
+      "id": 1784927239604,
+      "titre": "Location",
+      "secteur": "Point E",
+      "type": "Studio",
+      "prix": 65000,
+      "chambres": 1,
+      "salons": 1,
+      "description": "Moderne",
+      "equipements": [],
+      "telephoneProprietaire": "77 777 77 77",
+      "statut": "validee",
+      "disponibilite": "loue"
+    },
+    {
+      "id": 1784929870934,
+      "titre": "Location",
+      "secteur": "Patte d'Oie",
+      "type": "Maison",
+      "prix": 95000,
+      "chambres": 1,
+      "salons": 1,
+      "description": "maison 2 hectares",
+      "equipements": [],
+      "telephoneProprietaire": "78 342 42 65",
+      "statut": "validee"
+    },
+    {
+      "id": 1784994070120,
+      "titre": "Logement",
+      "secteur": "Gueule Tapée",
+      "type": "Appartement",
+      "prix": 450000,
+      "chambres": 7,
+      "salons": 1,
+      "description": "Appartement moderne",
+      "equipements": [],
+      "telephoneProprietaire": "775350229",
+      "proprietaireId": 1784985279929,
+      "photos": [
+        "/uploads/1784994070033-787892893.jpg"
+      ],
+      "statut": "validee"
+    },
+    {
+      "id": 1785022156049,
+      "titre": "Location",
+      "secteur": "Golf Sud",
+      "type": "Maison",
+      "prix": 240000,
+      "chambres": 5,
+      "salons": 1,
+      "description": "Maison de 6 hectares",
+      "equipements": [],
+      "telephoneProprietaire": "777635253",
+      "proprietaireId": 1785022020200,
+      "photos": [
+        "/uploads/1785022156026-260931770.jpg"
+      ],
+      "datePublication": "2026-07-25T23:29:16.049Z",
+      "statut": "validee",
+      "disponibilite": "disponible"
+    },
+    {
+      "id": 1785027290227,
+      "titre": "Logement",
+      "secteur": "Fass",
+      "type": "Studio",
+      "prix": 35000,
+      "chambres": 1,
+      "salons": 0,
+      "description": "Studio 2.0",
+      "equipements": [],
+      "telephoneProprietaire": "777635253",
+      "proprietaireId": 1785022020200,
+      "photos": [],
+      "datePublication": "2026-07-26T00:54:50.227Z",
+      "disponibilite": "disponible",
+      "statut": "validee"
+    },
+    {
+      "id": 1785031965300,
+      "titre": "Location",
+      "secteur": "Hann Bel-Air",
+      "type": "Chambre",
+      "prix": 50000,
+      "chambres": 1,
+      "salons": 0,
+      "description": "Chambre avec avec salle de bain",
+      "equipements": [],
+      "telephoneProprietaire": "775350229",
+      "proprietaireId": 1784985279929,
+      "photos": [],
+      "datePublication": "2026-07-26T02:12:45.300Z",
+      "disponibilite": "disponible",
+      "statut": "refusee"
+    },
+    {
+      "id": 1785085030654,
+      "titre": "Location",
+      "secteur": "Grand Yoff",
+      "type": "Appartement",
+      "prix": 180000,
+      "chambres": 3,
+      "salons": 1,
+      "description": "",
+      "equipements": [],
+      "telephoneProprietaire": "775350229",
+      "proprietaireId": 1784985279929,
+      "photos": [],
+      "datePublication": "2026-07-26T16:57:10.654Z",
+      "disponibilite": "disponible",
+      "statut": "validee"
+    }
+  ],
+  "demandes": [
+    {
+      "id": 1785027758084,
+      "logementId": 2,
+      "logementTitre": "Chambre avec salle de bain",
+      "nom": "Cheikh Faye ",
+      "telephone": "779876543",
+      "statut": "nouvelle"
+    },
+    {
+      "id": 1785085884106,
+      "logementId": 1784926985950,
+      "logementTitre": "Chambre",
+      "nom": "Moustapha",
+      "telephone": "776325880",
+      "statut": "nouvelle"
+    }
+  ],
+  "utilisateurs": [
+    {
+      "id": 1784985279929,
+      "nom": "Pape Mamadou Diop",
+      "telephone": "775350229",
+      "motDePasseHash": "$2b$10$etU9l093v295r0zYdVF.FerFLvDR7TU/hEL2a6TKy5jvJZz99JcfG",
+      "favoris": [
+        1
+      ]
+    },
+    {
+      "id": 1785022020200,
+      "nom": "Rokhaya Mbaye",
+      "telephone": "777635253",
+      "motDePasseHash": "$2b$10$QQ4Gl7UjsfdLMG0BCTn5.uWmkAbTMSEg1wSfWAa4UwMmZb/flfHDO",
+      "favoris": []
+    },
+    {
+      "id": 1785027487660,
+      "nom": "Mouhamed Gueye",
+      "telephone": "77632623",
+      "motDePasseHash": "$2b$10$qEwoOcEqeXDHsN1ogZZK/eiqEE4sD6KP1sctLs7tAWthFclTx2F5y",
+      "favoris": []
+    }
+  ]
+}
