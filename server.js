@@ -10,7 +10,14 @@ import { rateLimit } from 'express-rate-limit';
 import { Low } from 'lowdb';
 import { JSONFile } from 'lowdb/node';
 
+import fs from 'fs';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const dossierUploads = path.join(__dirname, 'uploads');
+if (!fs.existsSync(dossierUploads)) {
+  fs.mkdirSync(dossierUploads, { recursive: true });
+}
 
 const adapter = new JSONFile('db.json');
 const db = new Low(adapter, { logements: [], demandes: [], utilisateurs: [] });
