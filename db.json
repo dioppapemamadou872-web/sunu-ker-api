@@ -160,6 +160,28 @@
       "datePublication": "2026-07-26T16:57:10.654Z",
       "disponibilite": "disponible",
       "statut": "validee"
+    },
+    {
+      "id": 1785277328824,
+      "titre": "Location",
+      "secteur": "Grand Dakar",
+      "type": "Studio",
+      "prix": 54990,
+      "chambres": 1,
+      "salons": 0,
+      "description": "Studio de 1 mètre carré",
+      "equipements": [],
+      "telephoneProprietaire": "775350229",
+      "proprietaireId": 1784985279929,
+      "photos": [
+        "/uploads/1785277328791-423981946.jpg"
+      ],
+      "pieceIdentiteRecto": "/uploads/1785277328794-458082941.webp",
+      "pieceIdentiteVerso": "/uploads/1785277328804-683629598.webp",
+      "justificatifPropriete": "/uploads/1785277328816-332967944.jpeg",
+      "datePublication": "2026-07-28T22:22:08.824Z",
+      "disponibilite": "disponible",
+      "statut": "validee"
     }
   ],
   "demandes": [
@@ -177,6 +199,14 @@
       "logementTitre": "Chambre",
       "nom": "Moustapha",
       "telephone": "776325880",
+      "statut": "nouvelle"
+    },
+    {
+      "id": 1785305459603,
+      "logementId": 1785027290227,
+      "logementTitre": "Logement",
+      "nom": "Moussa Fall",
+      "telephone": "776254890",
       "statut": "nouvelle"
     }
   ],

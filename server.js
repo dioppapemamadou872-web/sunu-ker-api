@@ -5,12 +5,11 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { rateLimit } from 'express-rate-limit';
 import { Low } from 'lowdb';
 import { JSONFile } from 'lowdb/node';
-
-import fs from 'fs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -28,7 +27,7 @@ db.data.utilisateurs.forEach((u) => { u.favoris ||= []; });
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(dossierUploads));
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
@@ -36,27 +35,36 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 // --- UPLOAD PHOTOS ---
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, path.join(__dirname, 'uploads')),
+  destination: (req, file, cb) => cb(null, dossierUploads),
   filename: (req, file, cb) => {
     const nomUnique = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
     cb(null, nomUnique);
   },
 });
 
-const upload = multer({
+const uploadFiltre = (req, file, cb) => {
+  if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') cb(null, true);
+  else cb(new Error('Format de fichier non accepté'));
+};
+
+const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 }, fileFilter: uploadFiltre });
+
+const uploadAnnonce = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) cb(null, true);
-    else cb(new Error('Seules les images sont acceptées'));
-  },
-});
+  fileFilter: uploadFiltre,
+}).fields([
+  { name: 'photos', maxCount: 8 },
+  { name: 'pieceIdentiteRecto', maxCount: 1 },
+  { name: 'pieceIdentiteVerso', maxCount: 1 },
+  { name: 'justificatifPropriete', maxCount: 1 },
+]);
 
 // --- PROTECTION CONTRE LES TENTATIVES EN BOUCLE ---
 
 const limiteurConnexion = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 tentatives max
+  windowMs: 15 * 60 * 1000,
+  max: 5,
   message: { erreur: 'Trop de tentatives, réessayez dans 15 minutes' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -140,8 +148,8 @@ app.post('/api/proprietaires/inscription', limiteurConnexion, async (req, res) =
   db.data.utilisateurs.push(nouvelUtilisateur);
   await db.write();
 
-  const token = jwt.sign({ role: 'proprietaire', proprietaireId: utilisateur.id }, JWT_SECRET, { expiresIn: '30d' });
-  res.json({ token, prenom: utilisateur.prenom, nom: utilisateur.nom });
+  const token = jwt.sign({ role: 'proprietaire', proprietaireId: nouvelUtilisateur.id }, JWT_SECRET, { expiresIn: '30d' });
+  res.status(201).json({ token, prenom: nouvelUtilisateur.prenom, nom: nouvelUtilisateur.nom });
 });
 
 app.post('/api/proprietaires/connexion', limiteurConnexion, async (req, res) => {
@@ -158,8 +166,22 @@ app.post('/api/proprietaires/connexion', limiteurConnexion, async (req, res) => 
   }
 
   const token = jwt.sign({ role: 'proprietaire', proprietaireId: utilisateur.id }, JWT_SECRET, { expiresIn: '30d' });
-  res.json({ token, nom: utilisateur.nom });
+  res.json({ token, prenom: utilisateur.prenom, nom: utilisateur.nom });
 });
+
+app.get('/api/proprietaires/moi', verifierProprietaire, (req, res) => {
+  const utilisateur = db.data.utilisateurs.find((u) => u.id === req.proprietaireId);
+  if (!utilisateur) return res.status(404).json({ erreur: 'Utilisateur introuvable' });
+
+  res.json({
+    prenom: utilisateur.prenom,
+    nom: utilisateur.nom,
+    telephone: utilisateur.telephone,
+    email: utilisateur.email,
+    photoProfil: utilisateur.photoProfil,
+  });
+});
+
 app.patch('/api/proprietaires/moi', verifierProprietaire, async (req, res) => {
   const utilisateur = db.data.utilisateurs.find((u) => u.id === req.proprietaireId);
   if (!utilisateur) return res.status(404).json({ erreur: 'Utilisateur introuvable' });
@@ -203,6 +225,7 @@ app.patch('/api/proprietaires/moi', verifierProprietaire, async (req, res) => {
     photoProfil: utilisateur.photoProfil,
   });
 });
+
 app.post('/api/proprietaires/photo', verifierProprietaire, upload.single('photo'), async (req, res) => {
   const utilisateur = db.data.utilisateurs.find((u) => u.id === req.proprietaireId);
   if (!utilisateur) return res.status(404).json({ erreur: 'Utilisateur introuvable' });
@@ -211,18 +234,6 @@ app.post('/api/proprietaires/photo', verifierProprietaire, upload.single('photo'
   utilisateur.photoProfil = `/uploads/${req.file.filename}`;
   await db.write();
   res.json({ photoProfil: utilisateur.photoProfil });
-});
-app.get('/api/proprietaires/moi', verifierProprietaire, (req, res) => {
-  const utilisateur = db.data.utilisateurs.find((u) => u.id === req.proprietaireId);
-  if (!utilisateur) return res.status(404).json({ erreur: 'Utilisateur introuvable' });
-
-  res.json({
-    prenom: utilisateur.prenom,
-    nom: utilisateur.nom,
-    telephone: utilisateur.telephone,
-    email: utilisateur.email,
-    photoProfil: utilisateur.photoProfil,
-  });
 });
 
 app.post('/api/proprietaires/changer-mot-de-passe', verifierProprietaire, async (req, res) => {
@@ -244,6 +255,9 @@ app.post('/api/proprietaires/changer-mot-de-passe', verifierProprietaire, async 
   await db.write();
   res.json({ message: 'Mot de passe modifié avec succès' });
 });
+
+// --- FAVORIS ---
+
 app.get('/api/favoris', verifierProprietaire, (req, res) => {
   const utilisateur = db.data.utilisateurs.find((u) => u.id === req.proprietaireId);
   res.json(utilisateur?.favoris || []);
@@ -268,7 +282,16 @@ app.post('/api/favoris/:id/basculer', verifierProprietaire, async (req, res) => 
 
 // --- LOGEMENTS ---
 
+function retirerInfosSensibles(logement) {
+  const { telephoneProprietaire, proprietaireId, pieceIdentiteRecto, pieceIdentiteVerso, justificatifPropriete, ...donneesPubliques } = logement;
+  return donneesPubliques;
+}
+
 app.get('/api/logements', (req, res) => {
+  res.json(db.data.logements.map(retirerInfosSensibles));
+});
+
+app.get('/api/admin/logements', verifierAdmin, (req, res) => {
   res.json(db.data.logements);
 });
 
@@ -277,13 +300,22 @@ app.get('/api/mes-logements', verifierProprietaire, (req, res) => {
   res.json(mesLogements);
 });
 
-app.post('/api/logements', verifierProprietaire, upload.array('photos', 8), async (req, res) => {
+app.post('/api/logements', verifierProprietaire, uploadAnnonce, async (req, res) => {
   const proprietaire = db.data.utilisateurs.find((u) => u.id === req.proprietaireId);
-  const photos = (req.files || []).map((f) => `/uploads/${f.filename}`);
+  const fichiers = req.files || {};
+
+  const photos = (fichiers.photos || []).map((f) => `/uploads/${f.filename}`);
+  const pieceIdentiteRecto = fichiers.pieceIdentiteRecto?.[0] ? `/uploads/${fichiers.pieceIdentiteRecto[0].filename}` : null;
+  const pieceIdentiteVerso = fichiers.pieceIdentiteVerso?.[0] ? `/uploads/${fichiers.pieceIdentiteVerso[0].filename}` : null;
+  const justificatifPropriete = fichiers.justificatifPropriete?.[0] ? `/uploads/${fichiers.justificatifPropriete[0].filename}` : null;
 
   const prix = Number(req.body.prix);
   if (!req.body.titre || !req.body.secteur || !prix || prix <= 0) {
     return res.status(400).json({ erreur: 'Champs obligatoires manquants ou invalides' });
+  }
+
+  if (!pieceIdentiteRecto || !pieceIdentiteVerso || !justificatifPropriete) {
+    return res.status(400).json({ erreur: 'La pièce d\'identité (recto/verso) et le justificatif de propriété sont obligatoires' });
   }
 
   const nouveauLogement = {
@@ -299,6 +331,9 @@ app.post('/api/logements', verifierProprietaire, upload.array('photos', 8), asyn
     telephoneProprietaire: proprietaire.telephone,
     proprietaireId: proprietaire.id,
     photos,
+    pieceIdentiteRecto,
+    pieceIdentiteVerso,
+    justificatifPropriete,
     datePublication: new Date().toISOString(),
     disponibilite: 'disponible',
     statut: 'en_attente',
@@ -309,7 +344,40 @@ app.post('/api/logements', verifierProprietaire, upload.array('photos', 8), asyn
   res.status(201).json(nouveauLogement);
 });
 
-// Route générique de mise à jour (statut, disponibilité, motifRefus...) — réservée à l'admin
+// Modification par le PROPRIETAIRE (champs texte uniquement, repasse en attente si déjà validée)
+app.patch('/api/mes-logements/:id', verifierProprietaire, async (req, res) => {
+  const id = Number(req.params.id);
+  const logement = db.data.logements.find((l) => l.id === id);
+
+  if (!logement) return res.status(404).json({ erreur: 'Logement introuvable' });
+  if (logement.proprietaireId !== req.proprietaireId) {
+    return res.status(403).json({ erreur: 'Vous ne pouvez modifier que vos propres annonces' });
+  }
+
+  const { titre, secteur, type, prix, chambres, salons, description } = req.body;
+
+  if (!titre || !secteur || !prix || Number(prix) <= 0) {
+    return res.status(400).json({ erreur: 'Champs obligatoires manquants ou invalides' });
+  }
+
+  logement.titre = titre;
+  logement.secteur = secteur;
+  logement.type = type;
+  logement.prix = Number(prix);
+  logement.chambres = Math.max(0, Number(chambres) || 0);
+  logement.salons = Math.max(0, Number(salons) || 0);
+  logement.description = description || '';
+
+  if (logement.statut === 'validee') {
+    logement.statut = 'en_attente';
+    logement.motifRefus = null;
+  }
+
+  await db.write();
+  res.json(logement);
+});
+
+// Modification par l'ADMIN (statut, disponibilité, motif de refus...)
 app.patch('/api/logements/:id', verifierAdmin, async (req, res) => {
   const id = Number(req.params.id);
   const logement = db.data.logements.find((l) => l.id === id);
