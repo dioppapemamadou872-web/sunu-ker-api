@@ -32,19 +32,29 @@ app.use('/uploads', express.static(dossierUploads));
 const JWT_SECRET = process.env.JWT_SECRET;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
-// --- UPLOAD PHOTOS ---
+// --- UPLOAD PHOTOS SÉCURISÉ ---
+
+const extensionsAutorisees = ['.jpg', '.jpeg', '.png', '.webp'];
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, dossierUploads),
   filename: (req, file, cb) => {
-    const nomUnique = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
+    const ext = path.extname(file.originalname).toLowerCase();
+    const extSecurisee = extensionsAutorisees.includes(ext) ? ext : '.jpg';
+    const nomUnique = `${Date.now()}-${Math.round(Math.random() * 1e9)}${extSecurisee}`;
     cb(null, nomUnique);
   },
 });
 
 const uploadFiltre = (req, file, cb) => {
-  if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') cb(null, true);
-  else cb(new Error('Format de fichier non accepté'));
+  const ext = path.extname(file.originalname).toLowerCase();
+  const mimetypesAutorises = ['image/jpeg', 'image/png', 'image/webp'];
+
+  if (mimetypesAutorises.includes(file.mimetype) && extensionsAutorisees.includes(ext)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Format de fichier non accepté. Seules les images (JPG, PNG, WEBP) sont autorisées.'));
+  }
 };
 
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 }, fileFilter: uploadFiltre });
@@ -89,6 +99,27 @@ function verifierProprietaire(req, res, next) {
     if (payload.role !== 'proprietaire') throw new Error();
     req.proprietaireId = payload.proprietaireId;
     next();
+  } catch {
+    return res.status(401).json({ erreur: 'Session expirée, reconnectez-vous' });
+  }
+}
+
+function verifierAdminOuProprietaire(req, res, next) {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ erreur: 'Connexion requise' });
+
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    if (payload.role === 'admin') {
+      req.estAdmin = true;
+      return next();
+    }
+    if (payload.role === 'proprietaire') {
+      req.proprietaireId = payload.proprietaireId;
+      req.estAdmin = false;
+      return next();
+    }
+    throw new Error();
   } catch {
     return res.status(401).json({ erreur: 'Session expirée, reconnectez-vous' });
   }
@@ -440,7 +471,30 @@ app.post('/api/logements', verifierProprietaire, uploadAnnonce, async (req, res)
     chambres: Math.max(0, Number(req.body.chambres) || 0),
     salons: Math.max(0, Number(req.body.salons) || 0),
     description: req.body.description || '',
-    equipements: req.body.equipements ? JSON.parse(req.body.equipements) : [],
+  let equipements = [];
+  if (req.body.equipements) {
+    try {
+      equipements = JSON.parse(req.body.equipements);
+      if (!Array.isArray(equipements)) equipements = [];
+    } catch {
+      equipements = [];
+    }
+  }
+
+  if (!proprietaire) {
+    return res.status(404).json({ erreur: 'Compte propriétaire introuvable' });
+  }
+
+  const nouveauLogement = {
+    id: Date.now(),
+    titre: req.body.titre,
+    secteur: req.body.secteur,
+    type: req.body.type,
+    prix,
+    chambres: Math.max(0, Number(req.body.chambres) || 0),
+    salons: Math.max(0, Number(req.body.salons) || 0),
+    description: req.body.description || '',
+    equipements,
     telephoneProprietaire: proprietaire.telephone,
     whatsappProprietaire: proprietaire.whatsapp || proprietaire.telephone,
     proprietaireId: proprietaire.id,
@@ -500,12 +554,12 @@ app.patch('/api/logements/:id', verifierAdmin, async (req, res) => {
   res.json(logement);
 });
 
-app.delete('/api/logements/:id', verifierProprietaire, async (req, res) => {
+app.delete('/api/logements/:id', verifierAdminOuProprietaire, async (req, res) => {
   const id = Number(req.params.id);
   const logement = db.data.logements.find((l) => l.id === id);
 
   if (!logement) return res.status(404).json({ erreur: 'Logement introuvable' });
-  if (logement.proprietaireId !== req.proprietaireId) {
+  if (!req.estAdmin && logement.proprietaireId !== req.proprietaireId) {
     return res.status(403).json({ erreur: 'Vous ne pouvez supprimer que vos propres annonces' });
   }
 
