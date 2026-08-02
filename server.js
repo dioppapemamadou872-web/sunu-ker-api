@@ -53,12 +53,7 @@ const uploadAnnonce = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: uploadFiltre,
-}).fields([
-  { name: 'photos', maxCount: 8 },
-  { name: 'pieceIdentiteRecto', maxCount: 1 },
-  { name: 'pieceIdentiteVerso', maxCount: 1 },
-  { name: 'justificatifPropriete', maxCount: 1 },
-]);
+}).array('photos', 8);
 
 // --- PROTECTION CONTRE LES TENTATIVES EN BOUCLE ---
 
@@ -115,7 +110,7 @@ app.post('/api/login', limiteurConnexion, (req, res) => {
 // --- AUTH PROPRIETAIRES ---
 
 app.post('/api/proprietaires/inscription', limiteurConnexion, async (req, res) => {
-  const { prenom, nom, telephone, motDePasse } = req.body;
+  const { prenom, nom, telephone, whatsapp, motDePasse } = req.body;
 
   if (!prenom || !nom || !telephone || !motDePasse) {
     return res.status(400).json({ erreur: 'Tous les champs sont requis' });
@@ -129,6 +124,10 @@ app.post('/api/proprietaires/inscription', limiteurConnexion, async (req, res) =
     return res.status(400).json({ erreur: 'Le numéro de téléphone doit contenir exactement 9 chiffres' });
   }
 
+  if (whatsapp && !/^\d{9}$/.test(whatsapp)) {
+    return res.status(400).json({ erreur: 'Le numéro WhatsApp doit contenir exactement 9 chiffres' });
+  }
+
   const existant = db.data.utilisateurs.find((u) => u.telephone === telephone);
   if (existant) {
     return res.status(409).json({ erreur: 'Un compte existe déjà avec ce numéro' });
@@ -140,6 +139,7 @@ app.post('/api/proprietaires/inscription', limiteurConnexion, async (req, res) =
     prenom,
     nom,
     telephone,
+    whatsapp: whatsapp || telephone,
     email: null,
     photoProfil: null,
     motDePasseHash,
@@ -177,6 +177,7 @@ app.get('/api/proprietaires/moi', verifierProprietaire, (req, res) => {
     prenom: utilisateur.prenom,
     nom: utilisateur.nom,
     telephone: utilisateur.telephone,
+    whatsapp: utilisateur.whatsapp || utilisateur.telephone,
     email: utilisateur.email,
     photoProfil: utilisateur.photoProfil,
   });
@@ -186,7 +187,7 @@ app.patch('/api/proprietaires/moi', verifierProprietaire, async (req, res) => {
   const utilisateur = db.data.utilisateurs.find((u) => u.id === req.proprietaireId);
   if (!utilisateur) return res.status(404).json({ erreur: 'Utilisateur introuvable' });
 
-  const { prenom, nom, email, telephone } = req.body;
+  const { prenom, nom, email, telephone, whatsapp } = req.body;
 
   if (prenom !== undefined) {
     if (prenom.trim().length < 2) return res.status(400).json({ erreur: 'Prénom invalide' });
@@ -216,11 +217,19 @@ app.patch('/api/proprietaires/moi', verifierProprietaire, async (req, res) => {
     utilisateur.telephone = telephone;
   }
 
+  if (whatsapp !== undefined) {
+    if (whatsapp && !/^\d{9}$/.test(whatsapp)) {
+      return res.status(400).json({ erreur: 'Le numéro WhatsApp doit contenir exactement 9 chiffres' });
+    }
+    utilisateur.whatsapp = whatsapp || utilisateur.telephone;
+  }
+
   await db.write();
   res.json({
     prenom: utilisateur.prenom,
     nom: utilisateur.nom,
     telephone: utilisateur.telephone,
+    whatsapp: utilisateur.whatsapp,
     email: utilisateur.email,
     photoProfil: utilisateur.photoProfil,
   });
@@ -255,6 +264,22 @@ app.post('/api/proprietaires/changer-mot-de-passe', verifierProprietaire, async 
   await db.write();
   res.json({ message: 'Mot de passe modifié avec succès' });
 });
+app.delete('/api/proprietaires/moi', verifierProprietaire, async (req, res) => {
+  const utilisateur = db.data.utilisateurs.find((u) => u.id === req.proprietaireId);
+  if (!utilisateur) return res.status(404).json({ erreur: 'Utilisateur introuvable' });
+
+  const { motDePasse } = req.body;
+  const valide = await bcrypt.compare(motDePasse || '', utilisateur.motDePasseHash);
+  if (!valide) {
+    return res.status(401).json({ erreur: 'Mot de passe incorrect' });
+  }
+
+  db.data.utilisateurs = db.data.utilisateurs.filter((u) => u.id !== req.proprietaireId);
+  db.data.logements = db.data.logements.filter((l) => l.proprietaireId !== req.proprietaireId);
+
+  await db.write();
+  res.status(204).end();
+});
 
 // --- FAVORIS ---
 
@@ -283,7 +308,7 @@ app.post('/api/favoris/:id/basculer', verifierProprietaire, async (req, res) => 
 // --- LOGEMENTS ---
 
 function retirerInfosSensibles(logement) {
-  const { telephoneProprietaire, proprietaireId, pieceIdentiteRecto, pieceIdentiteVerso, justificatifPropriete, ...donneesPubliques } = logement;
+  const { telephoneProprietaire, whatsappProprietaire, proprietaireId, ...donneesPubliques } = logement;
   return donneesPubliques;
 }
 
@@ -295,6 +320,94 @@ app.get('/api/admin/logements', verifierAdmin, (req, res) => {
   res.json(db.data.logements);
 });
 
+app.get('/api/admin/stats', verifierAdmin, (req, res) => {
+  const logements = db.data.logements;
+  const demandes = db.data.demandes;
+
+  res.json({
+    totalLogements: logements.length,
+    enAttente: logements.filter((l) => l.statut === 'en_attente').length,
+    validees: logements.filter((l) => l.statut === 'validee').length,
+    refusees: logements.filter((l) => l.statut === 'refusee').length,
+    loues: logements.filter((l) => l.disponibilite === 'loue').length,
+    totalProprietaires: db.data.utilisateurs.length,
+    totalDemandes: demandes.length,
+    demandesNouvelles: demandes.filter((d) => d.statut === 'nouvelle').length,
+  });
+});
+app.get('/api/admin/activite', verifierAdmin, (req, res) => {
+  const evenements = [];
+
+  db.data.logements.forEach((l) => {
+    evenements.push({
+      type: l.statut === 'validee' ? 'validation' : l.statut === 'refusee' ? 'refus' : 'nouvelle_annonce',
+      texte: l.statut === 'validee'
+        ? `Annonce "${l.titre}" validée`
+        : l.statut === 'refusee'
+        ? `Annonce "${l.titre}" refusée`
+        : `Annonce "${l.titre}" en attente de validation`,
+      date: l.datePublication,
+    });
+  });
+
+  db.data.demandes.forEach((d) => {
+    evenements.push({
+      type: 'demande',
+      texte: `Nouvelle demande de contact de ${d.nom}`,
+      date: new Date(d.id).toISOString(),
+    });
+  });
+
+  const activite = evenements
+    .filter((e) => e.date)
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 8);
+
+  res.json(activite);
+});
+app.get('/api/admin/evolution', verifierAdmin, (req, res) => {
+  const semaines = {};
+
+  db.data.logements.forEach((l) => {
+    if (!l.datePublication) return;
+    const date = new Date(l.datePublication);
+    const cle = `${date.getFullYear()}-S${Math.ceil(date.getDate() / 7)}-${date.getMonth() + 1}`;
+    semaines[cle] = (semaines[cle] || 0) + 1;
+  });
+
+  const donnees = Object.entries(semaines)
+    .map(([cle, total]) => ({ semaine: cle, total }))
+    .slice(-6);
+
+  res.json(donnees);
+});
+
+app.get('/api/admin/proprietaires', verifierAdmin, (req, res) => {
+  const liste = db.data.utilisateurs.map((u) => ({
+    id: u.id,
+    prenom: u.prenom,
+    nom: u.nom,
+    telephone: u.telephone,
+    whatsapp: u.whatsapp || u.telephone,
+    email: u.email,
+    photoProfil: u.photoProfil,
+    nombreAnnonces: db.data.logements.filter((l) => l.proprietaireId === u.id).length,
+  }));
+  res.json(liste);
+});
+
+app.delete('/api/admin/proprietaires/:id', verifierAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  const utilisateur = db.data.utilisateurs.find((u) => u.id === id);
+  if (!utilisateur) return res.status(404).json({ erreur: 'Utilisateur introuvable' });
+
+  db.data.utilisateurs = db.data.utilisateurs.filter((u) => u.id !== id);
+  db.data.logements = db.data.logements.filter((l) => l.proprietaireId !== id);
+
+  await db.write();
+  res.status(204).end();
+});
+
 app.get('/api/mes-logements', verifierProprietaire, (req, res) => {
   const mesLogements = db.data.logements.filter((l) => l.proprietaireId === req.proprietaireId);
   res.json(mesLogements);
@@ -302,20 +415,20 @@ app.get('/api/mes-logements', verifierProprietaire, (req, res) => {
 
 app.post('/api/logements', verifierProprietaire, uploadAnnonce, async (req, res) => {
   const proprietaire = db.data.utilisateurs.find((u) => u.id === req.proprietaireId);
-  const fichiers = req.files || {};
-
-  const photos = (fichiers.photos || []).map((f) => `/uploads/${f.filename}`);
-  const pieceIdentiteRecto = fichiers.pieceIdentiteRecto?.[0] ? `/uploads/${fichiers.pieceIdentiteRecto[0].filename}` : null;
-  const pieceIdentiteVerso = fichiers.pieceIdentiteVerso?.[0] ? `/uploads/${fichiers.pieceIdentiteVerso[0].filename}` : null;
-  const justificatifPropriete = fichiers.justificatifPropriete?.[0] ? `/uploads/${fichiers.justificatifPropriete[0].filename}` : null;
+  const photos = (req.files || []).map((f) => `/uploads/${f.filename}`);
 
   const prix = Number(req.body.prix);
   if (!req.body.titre || !req.body.secteur || !prix || prix <= 0) {
     return res.status(400).json({ erreur: 'Champs obligatoires manquants ou invalides' });
   }
 
-  if (!pieceIdentiteRecto || !pieceIdentiteVerso || !justificatifPropriete) {
-    return res.status(400).json({ erreur: 'La pièce d\'identité (recto/verso) et le justificatif de propriété sont obligatoires' });
+  if (req.body.declarationHonneur !== 'true') {
+    return res.status(400).json({ erreur: 'La déclaration sur l\'honneur est obligatoire' });
+  }
+
+  const statutsValides = ['proprietaire', 'mandataire', 'famille'];
+  if (!statutsValides.includes(req.body.statutDeclarant)) {
+    return res.status(400).json({ erreur: 'Merci de préciser votre statut par rapport au logement' });
   }
 
   const nouveauLogement = {
@@ -329,11 +442,11 @@ app.post('/api/logements', verifierProprietaire, uploadAnnonce, async (req, res)
     description: req.body.description || '',
     equipements: req.body.equipements ? JSON.parse(req.body.equipements) : [],
     telephoneProprietaire: proprietaire.telephone,
+    whatsappProprietaire: proprietaire.whatsapp || proprietaire.telephone,
     proprietaireId: proprietaire.id,
     photos,
-    pieceIdentiteRecto,
-    pieceIdentiteVerso,
-    justificatifPropriete,
+    statutDeclarant: req.body.statutDeclarant,
+    declarationHonneur: true,
     datePublication: new Date().toISOString(),
     disponibilite: 'disponible',
     statut: 'en_attente',

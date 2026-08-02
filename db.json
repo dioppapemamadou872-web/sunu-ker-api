@@ -16,7 +16,8 @@
         "Wifi"
       ],
       "telephoneProprietaire": "77 000 00 00",
-      "statut": "validee"
+      "statut": "validee",
+      "disponibilite": "loue"
     },
     {
       "id": 2,
@@ -32,7 +33,8 @@
         "Électricité"
       ],
       "telephoneProprietaire": "77 111 11 11",
-      "statut": "validee"
+      "statut": "validee",
+      "disponibilite": "loue"
     },
     {
       "id": 1784926985950,
@@ -89,7 +91,8 @@
       "photos": [
         "/uploads/1784994070033-787892893.jpg"
       ],
-      "statut": "validee"
+      "statut": "en_attente",
+      "motifRefus": null
     },
     {
       "id": 1785022156049,
@@ -182,6 +185,138 @@
       "datePublication": "2026-07-28T22:22:08.824Z",
       "disponibilite": "disponible",
       "statut": "validee"
+    },
+    {
+      "id": 1785358687736,
+      "titre": "Appartement deux étages",
+      "secteur": "Sicap Liberté",
+      "type": "Appartement",
+      "prix": 600000,
+      "chambres": 8,
+      "salons": 3,
+      "description": "maison avec courant, eau, wifi",
+      "equipements": [],
+      "telephoneProprietaire": "775350229",
+      "proprietaireId": 1784985279929,
+      "photos": [],
+      "pieceIdentiteRecto": "/uploads/1785358687502-420750754.jpeg",
+      "pieceIdentiteVerso": "/uploads/1785358687527-299039236.png",
+      "justificatifPropriete": "/uploads/1785358687722-669669217.pdf",
+      "datePublication": "2026-07-29T20:58:07.736Z",
+      "disponibilite": "disponible",
+      "statut": "validee"
+    },
+    {
+      "id": 1785367785681,
+      "titre": "Studio meublé sur mer",
+      "secteur": "Grand Yoff",
+      "type": "Studio",
+      "prix": 45000,
+      "chambres": 1,
+      "salons": 1,
+      "description": "gdjj xkshxijxuwb niwhdxjowqibijoie",
+      "equipements": [],
+      "telephoneProprietaire": "705830233",
+      "proprietaireId": 1785360790440,
+      "photos": [
+        "/uploads/1785367785604-952344251.jpg"
+      ],
+      "pieceIdentiteRecto": "/uploads/1785367785608-916631767.webp",
+      "pieceIdentiteVerso": "/uploads/1785367785609-336477436.webp",
+      "justificatifPropriete": "/uploads/1785367785629-174363561.pdf",
+      "datePublication": "2026-07-29T23:29:45.681Z",
+      "disponibilite": "disponible",
+      "statut": "refusee",
+      "motifRefus": "Papiers non conformes aux demandes"
+    },
+    {
+      "id": 1785415457561,
+      "titre": "Maison moderne proche de la mer",
+      "secteur": "Patte d'Oie",
+      "type": "Maison",
+      "prix": 180000,
+      "chambres": 4,
+      "salons": 1,
+      "description": "yughde9ygf06gbvf7cv -yhgb7ohfew8guhf09eHG B8H9FPIEC7GIU",
+      "equipements": [],
+      "telephoneProprietaire": "775350229",
+      "proprietaireId": 1784985279929,
+      "photos": [],
+      "pieceIdentiteRecto": "/uploads/1785415457526-645226750.png",
+      "pieceIdentiteVerso": "/uploads/1785415457529-66125859.jpeg",
+      "justificatifPropriete": "/uploads/1785415457536-561537174.pdf",
+      "datePublication": "2026-07-30T12:44:17.561Z",
+      "disponibilite": "disponible",
+      "statut": "validee"
+    },
+    {
+      "id": 1785528279537,
+      "titre": "Chambré bien équipée ",
+      "secteur": "Sacré-Cœur",
+      "type": "Chambre",
+      "prix": 30000,
+      "chambres": 1,
+      "salons": 0,
+      "description": "gu3rnjn wejknfoirefnwoinc[iqjrjf ifqjoijrgvnfdrji",
+      "equipements": [],
+      "telephoneProprietaire": "775350229",
+      "whatsappProprietaire": "775350229",
+      "proprietaireId": 1784985279929,
+      "photos": [],
+      "statutDeclarant": "proprietaire",
+      "declarationHonneur": true,
+      "datePublication": "2026-07-31T20:04:39.537Z",
+      "disponibilite": "disponible",
+      "statut": "validee"
+    },
+    {
+      "id": 1785597046275,
+      "titre": "Chambre 5/5m",
+      "secteur": "Colobane",
+      "type": "Chambre",
+      "prix": 35000,
+      "chambres": 1,
+      "salons": 0,
+      "description": "sxdcvfgbhnj edrfgthyjuik edfrgthyjuik xecvfgbnhjm",
+      "equipements": [],
+      "telephoneProprietaire": "775350229",
+      "whatsappProprietaire": "775350229",
+      "proprietaireId": 1784985279929,
+      "photos": [
+        "/uploads/1785597046123-41221153.png",
+        "/uploads/1785597046165-558482973.png",
+        "/uploads/1785597046188-705312632.png",
+        "/uploads/1785597046242-349566029.jpeg",
+        "/uploads/1785597046244-679812940.webp",
+        "/uploads/1785597046244-538489758.webp",
+        "/uploads/1785597046245-374494251.png",
+        "/uploads/1785597046249-848579414.jpeg"
+      ],
+      "statutDeclarant": "proprietaire",
+      "declarationHonneur": true,
+      "datePublication": "2026-08-01T15:10:46.275Z",
+      "disponibilite": "disponible",
+      "statut": "validee"
+    },
+    {
+      "id": 1785680306179,
+      "titre": "Studio moderne",
+      "secteur": "Fann",
+      "type": "Studio",
+      "prix": 30000,
+      "chambres": 1,
+      "salons": 0,
+      "description": "",
+      "equipements": [],
+      "telephoneProprietaire": "775350229",
+      "whatsappProprietaire": "775350229",
+      "proprietaireId": 1784985279929,
+      "photos": [],
+      "statutDeclarant": "proprietaire",
+      "declarationHonneur": true,
+      "datePublication": "2026-08-02T14:18:26.180Z",
+      "disponibilite": "disponible",
+      "statut": "en_attente"
     }
   ],
   "demandes": [
@@ -191,7 +326,7 @@
       "logementTitre": "Chambre avec salle de bain",
       "nom": "Cheikh Faye ",
       "telephone": "779876543",
-      "statut": "nouvelle"
+      "statut": "traitee"
     },
     {
       "id": 1785085884106,
@@ -208,17 +343,27 @@
       "nom": "Moussa Fall",
       "telephone": "776254890",
       "statut": "nouvelle"
+    },
+    {
+      "id": 1785415200340,
+      "logementId": 1785277328824,
+      "logementTitre": "Location",
+      "nom": "Dacoumba Mbaye",
+      "telephone": "771916687",
+      "statut": "nouvelle"
     }
   ],
   "utilisateurs": [
     {
       "id": 1784985279929,
-      "nom": "Pape Mamadou Diop",
+      "nom": "Diop",
       "telephone": "775350229",
       "motDePasseHash": "$2b$10$etU9l093v295r0zYdVF.FerFLvDR7TU/hEL2a6TKy5jvJZz99JcfG",
       "favoris": [
-        1
-      ]
+        1785528279537
+      ],
+      "prenom": "Pape Mamadou",
+      "email": null
     },
     {
       "id": 1785022020200,
@@ -232,6 +377,17 @@
       "nom": "Mouhamed Gueye",
       "telephone": "77632623",
       "motDePasseHash": "$2b$10$qEwoOcEqeXDHsN1ogZZK/eiqEE4sD6KP1sctLs7tAWthFclTx2F5y",
+      "favoris": []
+    },
+    {
+      "id": 1785360790440,
+      "prenom": "Moustapha",
+      "nom": "Ba",
+      "telephone": "705830233",
+      "whatsapp": "705830233",
+      "email": null,
+      "photoProfil": null,
+      "motDePasseHash": "$2b$10$Tp54ShiFBoUnQz1QTIAL0.glqb5lz3jCiRWWhWfEnpEzWfBGC7E6y",
       "favoris": []
     }
   ]
