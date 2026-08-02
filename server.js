@@ -462,15 +462,10 @@ app.post('/api/logements', verifierProprietaire, uploadAnnonce, async (req, res)
     return res.status(400).json({ erreur: 'Merci de préciser votre statut par rapport au logement' });
   }
 
-  const nouveauLogement = {
-    id: Date.now(),
-    titre: req.body.titre,
-    secteur: req.body.secteur,
-    type: req.body.type,
-    prix,
-    chambres: Math.max(0, Number(req.body.chambres) || 0),
-    salons: Math.max(0, Number(req.body.salons) || 0),
-    description: req.body.description || '',
+  if (!proprietaire) {
+    return res.status(404).json({ erreur: 'Compte propriétaire introuvable' });
+  }
+
   let equipements = [];
   if (req.body.equipements) {
     try {
@@ -479,10 +474,6 @@ app.post('/api/logements', verifierProprietaire, uploadAnnonce, async (req, res)
     } catch {
       equipements = [];
     }
-  }
-
-  if (!proprietaire) {
-    return res.status(404).json({ erreur: 'Compte propriétaire introuvable' });
   }
 
   const nouveauLogement = {
