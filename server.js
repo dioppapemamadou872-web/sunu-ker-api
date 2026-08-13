@@ -19,9 +19,10 @@ if (!fs.existsSync(dossierUploads)) {
 }
 
 const adapter = new JSONFile('db.json');
-const db = new Low(adapter, { logements: [], demandes: [], utilisateurs: [] });
+const db = new Low(adapter, { logements: [], demandes: [], utilisateurs: [], alertes: [] });
 await db.read();
 db.data.utilisateurs ||= [];
+db.data.alertes ||= [];
 db.data.utilisateurs.forEach((u) => { u.favoris ||= []; });
 
 const app = express();
@@ -611,6 +612,55 @@ app.patch('/api/demandes/:id', verifierAdmin, async (req, res) => {
   Object.assign(demande, req.body);
   await db.write();
   res.json(demande);
+});
+
+// --- ALERTES RECHERCHE LOGEMENT ---
+
+app.get('/api/alertes', verifierAdmin, (req, res) => {
+  res.json(db.data.alertes || []);
+});
+
+app.post('/api/alertes', async (req, res) => {
+  const { prenom, nom, telephone, whatsapp, email, secteur, typeLogement, budgetMax } = req.body;
+
+  if (!nom || !telephone) {
+    return res.status(400).json({ erreur: 'Le nom et le numéro de téléphone sont obligatoires.' });
+  }
+
+  const nouvelleAlerte = {
+    id: Date.now(),
+    prenom: prenom || '',
+    nom,
+    telephone,
+    whatsapp: whatsapp || telephone,
+    email: email || '',
+    secteur: secteur || 'Tous',
+    typeLogement: typeLogement || 'Tous',
+    budgetMax: budgetMax ? Number(budgetMax) : null,
+    statut: 'active',
+    dateCreation: new Date().toISOString()
+  };
+
+  db.data.alertes ||= [];
+  db.data.alertes.push(nouvelleAlerte);
+  await db.write();
+  res.status(201).json(nouvelleAlerte);
+});
+
+app.patch('/api/alertes/:id', verifierAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  const alerte = (db.data.alertes || []).find((a) => a.id === id);
+  if (!alerte) return res.status(404).json({ erreur: 'Alerte introuvable' });
+  Object.assign(alerte, req.body);
+  await db.write();
+  res.json(alerte);
+});
+
+app.delete('/api/alertes/:id', verifierAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  db.data.alertes = (db.data.alertes || []).filter((a) => a.id !== id);
+  await db.write();
+  res.json({ succes: true });
 });
 
 const PORT = process.env.PORT || 4000;

@@ -74,7 +74,8 @@
       "description": "maison 2 hectares",
       "equipements": [],
       "telephoneProprietaire": "78 342 42 65",
-      "statut": "validee"
+      "statut": "validee",
+      "disponibilite": "loue"
     },
     {
       "id": 1784994070120,
@@ -317,6 +318,28 @@
       "datePublication": "2026-08-02T14:18:26.180Z",
       "disponibilite": "disponible",
       "statut": "en_attente"
+    },
+    {
+      "id": 1786146660830,
+      "titre": "Appartement meublé ",
+      "secteur": "Ouakam",
+      "type": "Appartement",
+      "prix": 170000,
+      "chambres": 2,
+      "salons": 1,
+      "description": "chaque chambre est equipé",
+      "equipements": [],
+      "telephoneProprietaire": "775350229",
+      "whatsappProprietaire": "775350229",
+      "proprietaireId": 1784985279929,
+      "photos": [
+        "/uploads/1786146660817-177377211.jpg"
+      ],
+      "statutDeclarant": "proprietaire",
+      "declarationHonneur": true,
+      "datePublication": "2026-08-07T23:51:00.830Z",
+      "disponibilite": "disponible",
+      "statut": "en_attente"
     }
   ],
   "demandes": [
@@ -350,6 +373,14 @@
       "logementTitre": "Location",
       "nom": "Dacoumba Mbaye",
       "telephone": "771916687",
+      "statut": "nouvelle"
+    },
+    {
+      "id": 1786146767302,
+      "logementId": 1785528279537,
+      "logementTitre": "Chambré bien équipée ",
+      "nom": "Pape Mamadou Diop",
+      "telephone": "774944730",
       "statut": "nouvelle"
     }
   ],
@@ -389,6 +420,21 @@
       "photoProfil": null,
       "motDePasseHash": "$2b$10$Tp54ShiFBoUnQz1QTIAL0.glqb5lz3jCiRWWhWfEnpEzWfBGC7E6y",
       "favoris": []
+    }
+  ],
+  "alertes": [
+    {
+      "id": 1786232530609,
+      "prenom": "Ousmane",
+      "nom": "Sow",
+      "telephone": "771234567",
+      "whatsapp": "771234567",
+      "email": "",
+      "secteur": "Almadies",
+      "typeLogement": "Studio",
+      "budgetMax": 150000,
+      "statut": "active",
+      "dateCreation": "2026-08-08T23:42:10.609Z"
     }
   ]
 }
