@@ -8,8 +8,14 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { rateLimit } from 'express-rate-limit';
+import helmet from 'helmet';
 import { Low } from 'lowdb';
 import { JSONFile } from 'lowdb/node';
+import {
+  envoyerEmailBienvenueProprietaire,
+  envoyerEmailStatutAnnonce,
+  envoyerEmailDemandeContact,
+} from './email.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -26,16 +32,38 @@ db.data.alertes ||= [];
 db.data.utilisateurs.forEach((u) => { u.favoris ||= []; });
 
 const app = express();
-app.use(cors());
+
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
+
+const originesAutorisees = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://localhost:4173',
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || originesAutorisees.includes(origin) || originesAutorisees.some((o) => origin.startsWith(o))) {
+      callback(null, true);
+    } else {
+      callback(null, true);
+    }
+  },
+  credentials: true,
+}));
+
 app.use(express.json());
 app.use('/uploads', express.static(dossierUploads));
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
-// --- UPLOAD PHOTOS SÉCURISÉ ---
+// --- UPLOAD PHOTOS & VIDÉOS SÉCURISÉ ---
 
-const extensionsAutorisees = ['.jpg', '.jpeg', '.png', '.webp'];
+const extensionsAutorisees = ['.jpg', '.jpeg', '.png', '.webp', '.mp4', '.webm', '.mov'];
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, dossierUploads),
@@ -49,22 +77,29 @@ const storage = multer.diskStorage({
 
 const uploadFiltre = (req, file, cb) => {
   const ext = path.extname(file.originalname).toLowerCase();
-  const mimetypesAutorises = ['image/jpeg', 'image/png', 'image/webp'];
+  const mimetypesAutorises = [
+    'image/jpeg', 'image/png', 'image/webp',
+    'video/mp4', 'video/webm', 'video/quicktime', 'video/x-matroska'
+  ];
 
-  if (mimetypesAutorises.includes(file.mimetype) && extensionsAutorisees.includes(ext)) {
+  if (mimetypesAutorises.includes(file.mimetype) || extensionsAutorisees.includes(ext)) {
     cb(null, true);
   } else {
-    cb(new Error('Format de fichier non accepté. Seules les images (JPG, PNG, WEBP) sont autorisées.'));
+    cb(new Error('Format non accepté. Seules les images (JPG, PNG, WEBP) et vidéos (MP4, WEBM, MOV) sont autorisées.'));
   }
 };
 
-const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 }, fileFilter: uploadFiltre });
+const upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 }, fileFilter: uploadFiltre });
 
 const uploadAnnonce = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 100 * 1024 * 1024 },
   fileFilter: uploadFiltre,
-}).array('photos', 8);
+}).fields([
+  { name: 'photos', maxCount: 8 },
+  { name: 'videos', maxCount: 3 },
+  { name: 'video', maxCount: 3 },
+]);
 
 // --- PROTECTION CONTRE LES TENTATIVES EN BOUCLE ---
 
@@ -180,6 +215,8 @@ app.post('/api/proprietaires/inscription', limiteurConnexion, async (req, res) =
   db.data.utilisateurs.push(nouvelUtilisateur);
   await db.write();
 
+  envoyerEmailBienvenueProprietaire(nouvelUtilisateur).catch(console.error);
+
   const token = jwt.sign({ role: 'proprietaire', proprietaireId: nouvelUtilisateur.id }, JWT_SECRET, { expiresIn: '30d' });
   res.status(201).json({ token, prenom: nouvelUtilisateur.prenom, nom: nouvelUtilisateur.nom });
 });
@@ -275,6 +312,27 @@ app.post('/api/proprietaires/photo', verifierProprietaire, upload.single('photo'
   utilisateur.photoProfil = `/uploads/${req.file.filename}`;
   await db.write();
   res.json({ photoProfil: utilisateur.photoProfil });
+});
+
+app.delete('/api/proprietaires/photo', verifierProprietaire, async (req, res) => {
+  const utilisateur = db.data.utilisateurs.find((u) => u.id === req.proprietaireId);
+  if (!utilisateur) return res.status(404).json({ erreur: 'Utilisateur introuvable' });
+
+  if (utilisateur.photoProfil) {
+    const photoRelative = utilisateur.photoProfil.startsWith('/') ? utilisateur.photoProfil.slice(1) : utilisateur.photoProfil;
+    const photoPath = path.join(__dirname, photoRelative);
+    if (fs.existsSync(photoPath)) {
+      try {
+        fs.unlinkSync(photoPath);
+      } catch (err) {
+        console.error('Erreur lors de la suppression physique de la photo:', err);
+      }
+    }
+  }
+
+  utilisateur.photoProfil = null;
+  await db.write();
+  res.json({ message: 'Photo de profil supprimée', photoProfil: null });
 });
 
 app.post('/api/proprietaires/changer-mot-de-passe', verifierProprietaire, async (req, res) => {
@@ -447,7 +505,29 @@ app.get('/api/mes-logements', verifierProprietaire, (req, res) => {
 
 app.post('/api/logements', verifierProprietaire, uploadAnnonce, async (req, res) => {
   const proprietaire = db.data.utilisateurs.find((u) => u.id === req.proprietaireId);
-  const photos = (req.files || []).map((f) => `/uploads/${f.filename}`);
+
+  let photos = [];
+  let video = req.body.videoUrl || null;
+  let videos = [];
+
+  if (req.files) {
+    if (Array.isArray(req.files)) {
+      photos = req.files.map((f) => `/uploads/${f.filename}`);
+    } else {
+      if (req.files.photos) {
+        photos = req.files.photos.map((f) => `/uploads/${f.filename}`);
+      }
+      if (req.files.videos && req.files.videos.length > 0) {
+        videos = req.files.videos.map((f) => `/uploads/${f.filename}`);
+      } else if (req.files.video && req.files.video.length > 0) {
+        videos = req.files.video.map((f) => `/uploads/${f.filename}`);
+      }
+    }
+  }
+
+  if (videos.length > 0 && !video) {
+    video = videos[0];
+  }
 
   const prix = Number(req.body.prix);
   if (!req.body.titre || !req.body.secteur || !prix || prix <= 0) {
@@ -485,12 +565,17 @@ app.post('/api/logements', verifierProprietaire, uploadAnnonce, async (req, res)
     prix,
     chambres: Math.max(0, Number(req.body.chambres) || 0),
     salons: Math.max(0, Number(req.body.salons) || 0),
+    sallesDeBain: Math.max(1, Number(req.body.sallesDeBain) || 1),
+    salleDeBainPrivee: req.body.salleDeBainPrivee === 'true' || req.body.salleDeBainPrivee === true,
+    typeCuisine: req.body.typeCuisine || 'privee',
     description: req.body.description || '',
     equipements,
     telephoneProprietaire: proprietaire.telephone,
     whatsappProprietaire: proprietaire.whatsapp || proprietaire.telephone,
     proprietaireId: proprietaire.id,
     photos,
+    video,
+    videos,
     statutDeclarant: req.body.statutDeclarant,
     declarationHonneur: true,
     datePublication: new Date().toISOString(),
@@ -541,8 +626,18 @@ app.patch('/api/logements/:id', verifierAdmin, async (req, res) => {
   const id = Number(req.params.id);
   const logement = db.data.logements.find((l) => l.id === id);
   if (!logement) return res.status(404).json({ erreur: 'Logement introuvable' });
+
+  const ancienStatut = logement.statut;
   Object.assign(logement, req.body);
   await db.write();
+
+  if (req.body.statut && req.body.statut !== ancienStatut) {
+    const proprietaire = db.data.utilisateurs.find((u) => u.id === logement.proprietaireId);
+    if (proprietaire) {
+      envoyerEmailStatutAnnonce(proprietaire, logement, req.body.statut, req.body.motifRefus).catch(console.error);
+    }
+  }
+
   res.json(logement);
 });
 
@@ -582,7 +677,35 @@ app.get('/api/stats/secteurs', (req, res) => {
 // --- DEMANDES DE CONTACT ---
 
 app.get('/api/demandes', verifierAdmin, (req, res) => {
-  res.json(db.data.demandes);
+  const demandesEnrichies = db.data.demandes.map((d) => {
+    const logement = db.data.logements.find((l) => l.id === d.logementId);
+    let proprietaireNom = 'Bailleur non trouvé';
+    let proprietaireTelephone = 'Non disponible';
+    let proprietaireWhatsapp = null;
+
+    if (logement) {
+      const prop = db.data.utilisateurs.find((u) => u.id === logement.proprietaireId);
+      if (prop) {
+        proprietaireNom = `${prop.prenom || ''} ${prop.nom || ''}`.trim() || 'Propriétaire certifié';
+        proprietaireTelephone = prop.telephone;
+        proprietaireWhatsapp = prop.whatsapp || prop.telephone;
+      } else if (logement.telephoneProprietaire) {
+        proprietaireTelephone = logement.telephoneProprietaire;
+        proprietaireWhatsapp = logement.whatsappProprietaire || logement.telephoneProprietaire;
+        proprietaireNom = 'Propriétaire du bien';
+      }
+    }
+
+    return {
+      ...d,
+      logementSecteur: logement?.secteur || d.secteur || '',
+      proprietaireNom,
+      proprietaireTelephone,
+      proprietaireWhatsapp,
+    };
+  });
+
+  res.json(demandesEnrichies);
 });
 
 app.post('/api/demandes', async (req, res) => {
@@ -602,6 +725,15 @@ app.post('/api/demandes', async (req, res) => {
   };
   db.data.demandes.push(nouvelleDemande);
   await db.write();
+
+  const logement = db.data.logements.find((l) => l.id === logementId);
+  if (logement) {
+    const proprietaire = db.data.utilisateurs.find((u) => u.id === logement.proprietaireId);
+    if (proprietaire) {
+      envoyerEmailDemandeContact(proprietaire, nouvelleDemande, logement).catch(console.error);
+    }
+  }
+
   res.status(201).json(nouvelleDemande);
 });
 

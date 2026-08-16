@@ -78,43 +78,6 @@
       "disponibilite": "loue"
     },
     {
-      "id": 1784994070120,
-      "titre": "Logement",
-      "secteur": "Gueule Tapée",
-      "type": "Appartement",
-      "prix": 450000,
-      "chambres": 7,
-      "salons": 1,
-      "description": "Appartement moderne",
-      "equipements": [],
-      "telephoneProprietaire": "775350229",
-      "proprietaireId": 1784985279929,
-      "photos": [
-        "/uploads/1784994070033-787892893.jpg"
-      ],
-      "statut": "en_attente",
-      "motifRefus": null
-    },
-    {
-      "id": 1785022156049,
-      "titre": "Location",
-      "secteur": "Golf Sud",
-      "type": "Maison",
-      "prix": 240000,
-      "chambres": 5,
-      "salons": 1,
-      "description": "Maison de 6 hectares",
-      "equipements": [],
-      "telephoneProprietaire": "777635253",
-      "proprietaireId": 1785022020200,
-      "photos": [
-        "/uploads/1785022156026-260931770.jpg"
-      ],
-      "datePublication": "2026-07-25T23:29:16.049Z",
-      "statut": "validee",
-      "disponibilite": "disponible"
-    },
-    {
       "id": 1785027290227,
       "titre": "Logement",
       "secteur": "Fass",
@@ -162,28 +125,6 @@
       "proprietaireId": 1784985279929,
       "photos": [],
       "datePublication": "2026-07-26T16:57:10.654Z",
-      "disponibilite": "disponible",
-      "statut": "validee"
-    },
-    {
-      "id": 1785277328824,
-      "titre": "Location",
-      "secteur": "Grand Dakar",
-      "type": "Studio",
-      "prix": 54990,
-      "chambres": 1,
-      "salons": 0,
-      "description": "Studio de 1 mètre carré",
-      "equipements": [],
-      "telephoneProprietaire": "775350229",
-      "proprietaireId": 1784985279929,
-      "photos": [
-        "/uploads/1785277328791-423981946.jpg"
-      ],
-      "pieceIdentiteRecto": "/uploads/1785277328794-458082941.webp",
-      "pieceIdentiteVerso": "/uploads/1785277328804-683629598.webp",
-      "justificatifPropriete": "/uploads/1785277328816-332967944.jpeg",
-      "datePublication": "2026-07-28T22:22:08.824Z",
       "disponibilite": "disponible",
       "statut": "validee"
     },
@@ -271,35 +212,6 @@
       "statut": "validee"
     },
     {
-      "id": 1785597046275,
-      "titre": "Chambre 5/5m",
-      "secteur": "Colobane",
-      "type": "Chambre",
-      "prix": 35000,
-      "chambres": 1,
-      "salons": 0,
-      "description": "sxdcvfgbhnj edrfgthyjuik edfrgthyjuik xecvfgbnhjm",
-      "equipements": [],
-      "telephoneProprietaire": "775350229",
-      "whatsappProprietaire": "775350229",
-      "proprietaireId": 1784985279929,
-      "photos": [
-        "/uploads/1785597046123-41221153.png",
-        "/uploads/1785597046165-558482973.png",
-        "/uploads/1785597046188-705312632.png",
-        "/uploads/1785597046242-349566029.jpeg",
-        "/uploads/1785597046244-679812940.webp",
-        "/uploads/1785597046244-538489758.webp",
-        "/uploads/1785597046245-374494251.png",
-        "/uploads/1785597046249-848579414.jpeg"
-      ],
-      "statutDeclarant": "proprietaire",
-      "declarationHonneur": true,
-      "datePublication": "2026-08-01T15:10:46.275Z",
-      "disponibilite": "disponible",
-      "statut": "validee"
-    },
-    {
       "id": 1785680306179,
       "titre": "Studio moderne",
       "secteur": "Fann",
@@ -317,7 +229,8 @@
       "declarationHonneur": true,
       "datePublication": "2026-08-02T14:18:26.180Z",
       "disponibilite": "disponible",
-      "statut": "en_attente"
+      "statut": "refusee",
+      "motifRefus": "Informations non-conformes aux exigeances"
     },
     {
       "id": 1786146660830,
@@ -339,7 +252,33 @@
       "declarationHonneur": true,
       "datePublication": "2026-08-07T23:51:00.830Z",
       "disponibilite": "disponible",
-      "statut": "en_attente"
+      "statut": "refusee",
+      "motifRefus": "Photos invisibles"
+    },
+    {
+      "id": 1786807042889,
+      "titre": "Studio meublé sur mer",
+      "secteur": "Cambérène",
+      "type": "Studio",
+      "prix": 75000,
+      "chambres": 1,
+      "salons": 0,
+      "sallesDeBain": 1,
+      "salleDeBainPrivee": true,
+      "typeCuisine": "kitchenette",
+      "description": "duwhfoienhcjoihew jkehcoihceic ihpiosajpihv",
+      "equipements": [],
+      "telephoneProprietaire": "775350229",
+      "whatsappProprietaire": "775350229",
+      "proprietaireId": 1784985279929,
+      "photos": [],
+      "video": null,
+      "videos": [],
+      "statutDeclarant": "proprietaire",
+      "declarationHonneur": true,
+      "datePublication": "2026-08-15T15:17:22.889Z",
+      "disponibilite": "disponible",
+      "statut": "validee"
     }
   ],
   "demandes": [
@@ -391,10 +330,12 @@
       "telephone": "775350229",
       "motDePasseHash": "$2b$10$etU9l093v295r0zYdVF.FerFLvDR7TU/hEL2a6TKy5jvJZz99JcfG",
       "favoris": [
-        1785528279537
+        1785528279537,
+        1785597046275
       ],
       "prenom": "Pape Mamadou",
-      "email": null
+      "email": null,
+      "photoProfil": null
     },
     {
       "id": 1785022020200,
