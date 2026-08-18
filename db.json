@@ -279,6 +279,31 @@
       "datePublication": "2026-08-15T15:17:22.889Z",
       "disponibilite": "disponible",
       "statut": "validee"
+    },
+    {
+      "id": 1787075332716,
+      "titre": "Maison a louer",
+      "secteur": "Almadies",
+      "type": "Maison",
+      "prix": 200000,
+      "chambres": 4,
+      "salons": 1,
+      "sallesDeBain": 3,
+      "salleDeBainPrivee": false,
+      "typeCuisine": "privee",
+      "description": "Belle maison moderne, spacieuse et lumineuse à louer, située dans un quartier calme, accessible et sécurisé. Elle dispose de chambres confortables, d’un grand salon lumineux, d’une cuisine fonctionnelle, de salles de bain modernes, d’une cour extérieure et d’un espace de stationnement. Eau et électricité disponibles. La maison est idéale pour une famille ou un couple et est disponible immédiatement.",
+      "equipements": [],
+      "telephoneProprietaire": "775350229",
+      "whatsappProprietaire": "775350229",
+      "proprietaireId": 1784985279929,
+      "photos": [],
+      "video": null,
+      "videos": [],
+      "statutDeclarant": "proprietaire",
+      "declarationHonneur": true,
+      "datePublication": "2026-08-18T17:48:52.716Z",
+      "disponibilite": "disponible",
+      "statut": "en_attente"
     }
   ],
   "demandes": [
@@ -376,6 +401,19 @@
       "budgetMax": 150000,
       "statut": "active",
       "dateCreation": "2026-08-08T23:42:10.609Z"
+    },
+    {
+      "id": 1787075877648,
+      "prenom": "Pape",
+      "nom": "Diop",
+      "telephone": "775350229",
+      "whatsapp": "775350229",
+      "email": "papemamadoudiop735@gmail.com",
+      "secteur": "Cambérène",
+      "typeLogement": "Studio",
+      "budgetMax": 90000,
+      "statut": "active",
+      "dateCreation": "2026-08-18T17:57:57.648Z"
     }
   ]
 }
